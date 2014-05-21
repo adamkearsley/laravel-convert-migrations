@@ -2,6 +2,7 @@ laravel-convert-migrations
 ==========================
 
 This is a custom command to convert your current SQL database schema into a Laravel 4 Migration file.
+Credit to 'bruceoutdoors' Original class = https://gist.github.com/bruceoutdoors/9166186
 
 INSTALLATION
 ==========================
