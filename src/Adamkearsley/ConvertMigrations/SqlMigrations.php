@@ -185,7 +185,7 @@ public function down()
                             $method = 'tinyInteger';
                         }
                         break;
-                        case 'date':
+                    case 'date':
                         $method = 'date';
                         break;
                     case 'timestamp' :
