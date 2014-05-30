@@ -161,6 +161,9 @@ public function down()
                     case 'int' :
                         $method = 'unsignedInteger';
                         break;
+                    case 'bigint' :
+                        $method = 'bigInteger';
+                        break;
                     case 'char' :
                     case 'varchar' :
                         $para = strpos($values->Type, '(');
