@@ -179,9 +179,12 @@ public function down()
                         $method = 'decimal';
                         break;
                     case 'tinyint' :
-                        $method = 'boolean';
-                        break;
-                    case 'date':
+                        if ($values->Type == 'tinyint(1)') {
+                            $method = 'boolean';
+                        } else {
+                            $method = 'tinyInteger';
+                        }
+                        break;:
                         $method = 'date';
                         break;
                     case 'timestamp' :
