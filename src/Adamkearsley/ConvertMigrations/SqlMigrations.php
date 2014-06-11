@@ -161,6 +161,9 @@ public function down()
                     case 'int' :
                         $method = 'unsignedInteger';
                         break;
+                    case 'bigint' :
+                        $method = 'bigInteger';
+                        break;
                     case 'char' :
                     case 'varchar' :
                         $para = strpos($values->Type, '(');
@@ -176,7 +179,11 @@ public function down()
                         $method = 'decimal';
                         break;
                     case 'tinyint' :
-                        $method = 'boolean';
+                        if ($values->Type == 'tinyint(1)') {
+                            $method = 'boolean';
+                        } else {
+                            $method = 'tinyInteger';
+                        }
                         break;
                     case 'date':
                         $method = 'date';
