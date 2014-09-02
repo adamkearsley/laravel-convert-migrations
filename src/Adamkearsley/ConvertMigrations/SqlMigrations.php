@@ -185,6 +185,12 @@ public function down()
                             $method = 'tinyInteger';
                         }
                         break;
+                    case 'smallint':
+                        $method = 'smallInteger';
+                        break;
+                    case 'mediumint':
+                        $method = 'mediumInteger';
+                        break;
                     case 'date':
                         $method = 'date';
                         break;
