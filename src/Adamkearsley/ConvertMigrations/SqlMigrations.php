@@ -1,11 +1,13 @@
-<?php namespace Adamkearsley\ConvertMigrations;
+<?php
+
+namespace Adamkearsley\ConvertMigrations;
 
 use DB;
 use Str;
 
 class SqlMigrations
 {
- 
+
     private static $ignore = array('migrations');
     private static $database = "";
     private static $migrations = false;
@@ -14,39 +16,40 @@ class SqlMigrations
     private static $instance;
     private static $up = "";
     private static $down = "";
- 
+
     private static function getTables()
     {
         return DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema="' . self::$database . '"');
     }
- 
+
     private static function getTableDescribes($table)
     {
         return DB::table('information_schema.columns')
-                ->where('table_schema', '=', self::$database)
-                ->where('table_name', '=', $table)
-                ->get(self::$selects);
+                        ->where('table_schema', '=', self::$database)
+                        ->where('table_name', '=', $table)
+                        ->get(self::$selects);
     }
- 
+
     private static function getForeignTables()
     {
         return DB::table('information_schema.KEY_COLUMN_USAGE')
-                ->where('CONSTRAINT_SCHEMA', '=', self::$database)
-                ->where('REFERENCED_TABLE_SCHEMA', '=', self::$database)
-                ->select('TABLE_NAME')->distinct()
-                ->get();
+                        ->where('CONSTRAINT_SCHEMA', '=', self::$database)
+                        ->where('REFERENCED_TABLE_SCHEMA', '=', self::$database)
+                        ->select('TABLE_NAME')->distinct()
+                        ->get();
     }
- 
+
     private static function getForeigns($table)
     {
         return DB::table('information_schema.KEY_COLUMN_USAGE')
-                ->where('CONSTRAINT_SCHEMA', '=', self::$database)
-                ->where('REFERENCED_TABLE_SCHEMA', '=', self::$database)
-                ->where('TABLE_NAME', '=', $table)
-                ->select('COLUMN_NAME', 'REFERENCED_TABLE_NAME', 'REFERENCED_COLUMN_NAME')
-                ->get();
+                        ->where('CONSTRAINT_SCHEMA', '=', self::$database)
+                        ->where('REFERENCED_TABLE_SCHEMA', '=', self::$database)
+                        ->where('TABLE_NAME', '=', $table)
+                        ->select('COLUMN_NAME', 'REFERENCED_TABLE_NAME',
+                                'REFERENCED_COLUMN_NAME')
+                        ->get();
     }
- 
+
     private static function compileSchema()
     {
         $upSchema = "";
@@ -65,7 +68,7 @@ class SqlMigrations
             $downSchema .= "
 {$values['down']}";
         }
- 
+
         $schema = "<?php
  
 //
@@ -93,47 +96,47 @@ public function down()
 " . self::$down . "
 }
 }";
- 
+
         return $schema;
     }
- 
+
     public function up($up)
     {
         self::$up = $up;
         return self::$instance;
     }
- 
+
     public function down($down)
     {
         self::$down = $down;
         return self::$instance;
     }
- 
+
     public function ignore($tables)
     {
         self::$ignore = array_merge($tables, self::$ignore);
         return self::$instance;
     }
- 
+
     public function migrations()
     {
         self::$migrations = true;
         return self::$instance;
     }
- 
+
     public function write()
     {
         $schema = self::compileSchema();
         $filename = date('Y_m_d_His') . "_create_" . self::$database . "_database.php";
         $path = app_path('database/migrations/');
-        file_put_contents($path.$filename, $schema);
+        file_put_contents($path . $filename, $schema);
     }
- 
+
     public function get()
     {
         return self::compileSchema();
     }
- 
+
     public function convert($database)
     {
         self::$instance = new self();
@@ -144,10 +147,11 @@ public function down()
             if (in_array($value->table_name, self::$ignore)) {
                 continue;
             }
- 
+
             $down = "Schema::drop('{$value->table_name}');";
             $up = "Schema::create('{$value->table_name}', function($" . "table) {\n";
             $tableDescribes = self::getTableDescribes($value->table_name);
+            $arrPrimary = array();
             foreach ($tableDescribes as $values) {
                 $method = "";
                 $para = strpos($values->Type, '(');
@@ -159,7 +163,7 @@ public function down()
                 $unique = $values->Key == 'UNI' ? "->unique()" : "";
                 switch ($type) {
                     case 'int' :
-                        $method = 'unsignedInteger';
+                        $method = 'integer';
                         break;
                     case 'bigint' :
                         $method = 'bigInteger';
@@ -208,18 +212,26 @@ public function down()
                         break;
                 }
                 if ($values->Key == 'PRI') {
-                    $method = 'increments';
+                    $arrPrimary [] = "'" . $values->Field . "'";
                 }
-                $up .= " $" . "table->{$method}('{$values->Field}'{$numbers}){$nullable}{$default}{$unsigned}{$unique};\n";
+                if (in_array($type,
+                                array('tinyint', 'smallint', 'mediumint', 'int', 'bigint')) && $values->Extra == 'auto_increment') {
+                    $up .= " $" . "table->{$method}('{$values->Field}','true'){$nullable}{$default}{$unsigned}{$unique};\n";
+                } else {
+                    $up .= " $" . "table->{$method}('{$values->Field}'{$numbers}){$nullable}{$default}{$unsigned}{$unique};\n";
+                }
             }
- 
+            if (!empty($arrPrimary)) {
+                $up .= " $" . "table->primary(array(" . implode(",", $arrPrimary) . "));\n";
+            }
+
             $up .= " });\n\n";
             self::$schema[$value->table_name] = array(
                 'up' => $up,
                 'down' => $down
             );
         }
- 
+
         // add foreign constraints, if any
         $tableForeigns = self::getForeignTables();
         if (sizeof($tableForeigns) !== 0) {
@@ -236,7 +248,8 @@ public function down()
                 );
             }
         }
- 
+
         return self::$instance;
     }
+
 }
