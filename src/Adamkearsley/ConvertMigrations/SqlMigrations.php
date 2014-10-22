@@ -157,7 +157,13 @@ public function down()
                 $default = empty($values->Default) ? "" : "->default(\"{$values->Default}\")";
                 $unsigned = strpos($values->Type, "unsigned") === false ? '' : '->unsigned()';
                 $unique = $values->Key == 'UNI' ? "->unique()" : "";
+                $choices = '';
                 switch ($type) {
+                    case 'enum':
+                        $method = 'enum';
+                        $choices = preg_replace('/enum/', 'array', $values->Type);
+                        $choices = ", $choices";
+                        break;
                     case 'int' :
                         $method = 'unsignedInteger';
                         break;
@@ -204,7 +210,7 @@ public function down()
                 if ($values->Key == 'PRI') {
                     $method = 'increments';
                 }
-                $up .= " $" . "table->{$method}('{$values->Field}'{$numbers}){$nullable}{$default}{$unsigned}{$unique};\n";
+                $up .= " $" . "table->{$method}('{$values->Field}'{$choices}{$numbers}){$nullable}{$default}{$unsigned}{$unique};\n";
             }
  
             $up .= " });\n\n";
