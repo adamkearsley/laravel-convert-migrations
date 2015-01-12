@@ -18,7 +18,11 @@ class ConvertMigrationsServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('adamkearsley/convert-migrations');
+    	// Workaround until the L5.0 workbench/packages are fixed / clarified with official
+    	// Laravel 5.0 release
+        if (method_exists($this, 'package')) {
+        	$this->package('adamkearsley/convert-migrations');
+        }
     }
 
 	/**
