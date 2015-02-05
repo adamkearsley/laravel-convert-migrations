@@ -17,7 +17,7 @@ class SqlMigrations
  
     private static function getTables()
     {
-        return DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema="' . self::$database . '"');
+        return DB::select('SELECT table_name FROM information_schema.tables WHERE Table_Type="'."BASE TABLE".'" and table_schema="' . self::$database . '"');
     }
  
     private static function getTableDescribes($table)
@@ -169,6 +169,9 @@ public function down()
                         break;
                     case 'bigint' :
                         $method = 'bigInteger';
+                        break;
+                    case 'samllint' :
+                        $method = 'smallInteger';
                         break;
                     case 'char' :
                     case 'varchar' :
