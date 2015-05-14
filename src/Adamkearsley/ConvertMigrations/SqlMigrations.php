@@ -1,7 +1,7 @@
 <?php namespace Adamkearsley\ConvertMigrations;
 
 use DB;
-use Str;
+use Illuminate\Support\Str;
 
 class SqlMigrations
 {
@@ -125,7 +125,7 @@ public function down()
     {
         $schema = self::compileSchema();
         $filename = date('Y_m_d_His') . "_create_" . self::$database . "_database.php";
-        $path = app_path('database/migrations/');
+        $path = app()->databasePath().'/migrations/';
         file_put_contents($path.$filename, $schema);
     }
  
