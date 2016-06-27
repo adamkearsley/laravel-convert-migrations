@@ -5,7 +5,6 @@ use Illuminate\Support\Str;
 
 class SqlMigrations
 {
- 
     private static $ignore = array('migrations');
     private static $database = "";
     private static $migrations = false;
@@ -62,8 +61,10 @@ class SqlMigrations
 // --------------------------------------------------
  
 {$values['up']}";
+            if ( $values['down'] !== "" ) {
             $downSchema .= "
 {$values['down']}";
+            }
         }
  
         $schema = "<?php
@@ -136,6 +137,7 @@ public function down()
  
     public function convert($database)
     {
+        $downStack = array();
         self::$instance = new self();
         self::$database = $database;
         $table_headers = array('Field', 'Type', 'Null', 'Key', 'Default', 'Extra');
@@ -145,6 +147,7 @@ public function down()
                 continue;
             }
  
+            $downStack[] = $value->table_name;
             $down = "Schema::drop('{$value->table_name}');";
             $up = "Schema::create('{$value->table_name}', function($" . "table) {\n";
             $tableDescribes = self::getTableDescribes($value->table_name);
@@ -222,6 +225,7 @@ public function down()
                 'down' => $down
             );
         }
+
  
         // add foreign constraints, if any
         $tableForeigns = self::getForeignTables();
@@ -235,7 +239,7 @@ public function down()
                 $up .= " });\n\n";
                 self::$schema[$value->TABLE_NAME . '_foreign'] = array(
                     'up' => $up,
-                    'down' => $down
+                    'down' => ( ! in_array($value->TABLE_NAME, $downStack) ) ? $down : "",
                 );
             }
         }

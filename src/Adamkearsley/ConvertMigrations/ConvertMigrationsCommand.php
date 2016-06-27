@@ -1,8 +1,6 @@
 <?php namespace Adamkearsley\ConvertMigrations;
 
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 
 class ConvertMigrationsCommand extends Command {
 
@@ -11,7 +9,7 @@ class ConvertMigrationsCommand extends Command {
      *
      * @var string
      */
-    protected $name = 'convert:migrations';
+    protected $signature = 'convert:migrations {database} {--ignore=}';
 
     /**
      * The console command description.
@@ -35,7 +33,7 @@ class ConvertMigrationsCommand extends Command {
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
         $ignoreInput = str_replace(' ', '', $this->option('ignore'));
         $ignoreInput = explode(',', $ignoreInput);
@@ -45,29 +43,4 @@ class ConvertMigrationsCommand extends Command {
         $migrate->write();
         $this->info('Migration Created Successfully');
     }
-
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return array(
-            array('database', InputArgument::REQUIRED, 'Name of Database to convert'),
-        );
-    }
-
-    /**
-     * Get the console command options.
-     *
-     * @return array
-     */
-    protected function getOptions()
-    {
-        return array(
-            array('ignore', null, InputOption::VALUE_OPTIONAL, 'Tables to ignore', null),
-        );
-    }
-
 }
